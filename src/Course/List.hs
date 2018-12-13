@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+-- @as language options
+{-# LANGUAGE NoImplicitPrelude #-} 
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -37,6 +38,7 @@ data List t =
   deriving (Eq, Ord)
 
 -- Right-associative
+-- ??
 infixr 5 :.
 
 instance Show t => Show (List t) where
@@ -50,10 +52,19 @@ infinity =
   in inf 0
 
 -- functions over List that you may consider using
+-- "constructor replacement" 
+-- 1 :. 2 :. 3 :. Nil
+-- 1 `f` 2 `f` 3 `f` b
+-- 1 2 3 Nil
+-- for infinite list, there is no nil, so can't pass infinite list to foldright
+
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
 
+-- for loop
+-- var x = b
+-- for (
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
 foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
@@ -71,12 +82,16 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- prop> \x -> x `headOr` infinity == 0
 --
 -- prop> \x -> x `headOr` Nil == x
+-- TODO: go through this
 headOr ::
   a
   -> List a
   -> a
-headOr =
-  error "todo: Course.List#headOr"
+headOr = foldRight const
+
+
+
+
 
 -- | The product of the elements of a list.
 --
@@ -129,12 +144,18 @@ length =
 -- prop> \x -> headOr x (map (+1) infinity) == 1
 --
 -- prop> \x -> map id x == x
-map ::
+{-map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map _ Nil = Nil
+map f (x :. xs) = (f x) :. (map f xs)
+-}
+
+-- foldRight :: (a -> b -> b) -> b -> List a -> b
+map :: (a->b) -> List a -> List b
+--map f xs = foldRight (\a b -> (f a :. b) Nil xs
+map f = foldRight ((:.) . f ) Nil
 
 -- | Return elements satisfying the given predicate.
 --
@@ -150,8 +171,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter f = foldRight (\a b -> if (f a) then a :. b else b  ) Nil 
 
 -- | Append two lists to a new list.
 --
@@ -169,8 +189,8 @@ filter =
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) xs ys = foldRight (:.) ys xs
+ -- flip (foldRight (:.))
 
 infixr 5 ++
 
@@ -187,8 +207,7 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten =
-  error "todo: Course.List#flatten"
+flatten = foldRight (++) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -204,8 +223,7 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f xs = error "todo: Course.List#flattenAgain" 
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -298,12 +316,12 @@ lengthGT4 =
 -- prop> \x -> let types = x :: List Int in reverse x ++ reverse y == reverse (y ++ x)
 --
 -- prop> \x -> let types = x :: Int in reverse (x :. Nil) == x :. Nil
+-- foldLeft :: (b -> a -> b) -> b -> List a -> b
 reverse ::
   List a
   -> List a
-reverse =
-  error "todo: Course.List#reverse"
-
+reverse = foldLeft (flip :.)  Nil  
+--
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
 --
@@ -330,8 +348,7 @@ produce f x = x :. produce f (f x)
 notReverse ::
   List a
   -> List a
-notReverse =
-  error "todo: Is it even possible?"
+notReverse = revese --
 
 ---- End of list exercises
 
