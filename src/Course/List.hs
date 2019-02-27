@@ -52,7 +52,9 @@ infinity =
   in inf 0
 
 -- functions over List that you may consider using
--- "constructor replacement" 
+
+-- @as takes the last element and applies the function with b
+-- @as "constructor replacement"
 -- 1 :. 2 :. 3 :. Nil
 -- 1 `f` 2 `f` 3 `f` b
 -- 1 2 3 Nil
@@ -62,12 +64,18 @@ foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
 
--- for loop
--- var x = b
--- for (
+-- @as for loop
+-- @as var x = b
+-- @as why seq used here
+-- foldLeft :: (b -> a -> b) -> b -> List a -> b
+-- foldLeft _ b Nil      = b
+-- foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
+
+-- @as
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
-foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
+-- foldLeft f b (h :. t) = foldLeft f (f b h) t
+foldLeft f b (h :.t) = let b' = f b h in foldLeft f b' t
 
 -- END Helper functions and data types
 
@@ -82,15 +90,21 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- prop> \x -> x `headOr` infinity == 0
 --
 -- prop> \x -> x `headOr` Nil == x
--- TODO: go through this
+
+-- @as TODO: go through this
 headOr ::
   a
   -> List a
   -> a
 headOr = foldRight const
-
-
-
+-- headOr z x = foldRight (\a b -> a) z x -- @as consider the 2 conditions:
+                                          -- if x == Nil, headOr returns default param
+                                          -- if not, it should return the head no matter what, that's the lambda there
+                                          -- the lambda is such keeping in mind the type of first param of fold right
+-- headOr = foldRight (\a b -> a)
+-- headOr = foldRight const
+-- headOr = foldLeft (\a b -> b) -- foldLeft implementation is wrong here, coz const b h = b,
+                                 -- so, headOr 3 (1 :. 2 :. Nil) = 3
 
 
 -- | The product of the elements of a list.
@@ -106,8 +120,7 @@ headOr = foldRight const
 product ::
   List Int
   -> Int
-product =
-  error "todo: Course.List#product"
+product = foldRight (*) 1
 
 -- | Sum the elements of the list.
 --
@@ -121,8 +134,8 @@ product =
 sum ::
   List Int
   -> Int
-sum =
-  error "todo: Course.List#sum"
+-- sum = foldLeft (+) 0
+sum = foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -133,8 +146,8 @@ sum =
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length xs = foldRight (+) 0 (map (const 1) xs)
+-- length = foldr (const (1+)) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -153,9 +166,12 @@ map f (x :. xs) = (f x) :. (map f xs)
 -}
 
 -- foldRight :: (a -> b -> b) -> b -> List a -> b
+-- (.) :: (b -> c) -> (a -> b) -> (a -> c)
+-- (f . g) x means g is executed first, = f(g(x))
 map :: (a->b) -> List a -> List b
 --map f xs = foldRight (\a b -> (f a :. b) Nil xs
-map f = foldRight ((:.) . f ) Nil
+map f = foldRight ((:.) . f ) Nil -- compose (.) should f then :.
+
 
 -- | Return elements satisfying the given predicate.
 --
@@ -171,7 +187,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter f = foldRight (\a b -> if (f a) then a :. b else b  ) Nil 
+filter f = foldRight (\a b -> if (f a) then a :. b else b  ) Nil
 
 -- | Append two lists to a new list.
 --
@@ -189,8 +205,8 @@ filter f = foldRight (\a b -> if (f a) then a :. b else b  ) Nil
   List a
   -> List a
   -> List a
-(++) xs ys = foldRight (:.) ys xs
- -- flip (foldRight (:.))
+-- (++) xs ys = foldRight (:.) ys xs
+(++) = flip (foldRight (:.))
 
 infixr 5 ++
 
@@ -223,7 +239,7 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap f xs = error "todo: Course.List#flattenAgain" 
+flatMap f = flatten . map f
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -233,7 +249,7 @@ flattenAgain ::
   List (List a)
   -> List a
 flattenAgain =
-  error "todo: Course.List#flattenAgain"
+  flatMap id
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -261,7 +277,8 @@ seqOptional ::
   List (Optional a)
   -> Optional (List a)
 seqOptional =
-  error "todo: Course.List#seqOptional"
+  -- foldRight _f (Full [])
+  foldRight twiceOptional (Full [])
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -320,7 +337,9 @@ lengthGT4 =
 reverse ::
   List a
   -> List a
-reverse = foldLeft (flip :.)  Nil  
+reverse =
+  error "todo: Course.List#reverse"
+
 --
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -345,10 +364,10 @@ produce f x = x :. produce f (f x)
 -- prop> \x -> let types = x :: List Int in notReverse x ++ notReverse y == notReverse (y ++ x)
 --
 -- prop> \x -> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
-notReverse ::
-  List a
-  -> List a
-notReverse = revese --
+-- ::
+ -- List a
+  -- -> List a
+-- notReverse = revese --
 
 ---- End of list exercises
 
