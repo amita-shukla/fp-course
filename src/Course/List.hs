@@ -187,7 +187,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter f = foldRight (\a b -> if (f a) then a :. b else b  ) Nil
+filter f = foldRight (\a b -> if f a then a :. b else b  ) Nil
 
 -- | Append two lists to a new list.
 --
@@ -276,9 +276,7 @@ flattenAgain =
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional =
-  -- foldRight _f (Full [])
-  foldRight twiceOptional (Full [])
+seqOptional = foldRight (twiceOptional (:.)) (Full Nil)
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -300,8 +298,17 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find p xs =
+  case filter p xs of
+    Nil -> Empty
+    h :. _ -> Full h
+-- the below code fails for infinity, ofcourse, you used length
+--  if length filtered > 0
+--    then Full (head filtered)
+--    else Empty
+--  where
+--    filtered = filter p xs
+--    head (h :. t) = h
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -316,11 +323,13 @@ find =
 --
 -- >>> lengthGT4 infinity
 -- True
+-- using length function will fail for infinite list
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 (_:._:._:._:.Nil) = True
+lengthGT4 _ = False
+
 
 -- | Reverse a list.
 --
@@ -338,7 +347,7 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+
 
 --
 -- | Produce an infinite `List` that seeds with the given value at its head,
