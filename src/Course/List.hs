@@ -327,6 +327,7 @@ find p xs =
 lengthGT4 ::
   List a
   -> Bool
+-- lengthGT4 = (>4) length -- this throws SO for infinite list, as we used length fun
 lengthGT4 (_:._:._:._:.Nil) = True
 lengthGT4 _ = False
 
@@ -346,7 +347,10 @@ lengthGT4 _ = False
 reverse ::
   List a
   -> List a
-reverse =
+reverse = foldLeft (flip (:.)) Nil
+-- append nil to the front, and change the direction of list
+-- e.g 1 :. 2 :. 3 :. Nil
+--     Nil .: 1 .: 2 .: 3
 
 
 --
