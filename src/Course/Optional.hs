@@ -60,7 +60,7 @@ bindOptional _ Empty = Empty
   -> a
   -> a
 (??) (Full x) _ = x
-(??) (Empty) a = a
+(??) Empty a = a
   
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
