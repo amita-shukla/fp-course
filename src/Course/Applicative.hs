@@ -65,7 +65,7 @@ instance Applicative List where
   pure x = x :. Nil
   (<*>) :: List (a -> b) -> List a -> List b
   (<*>) xs ys = flatten (map (\x -> map x ys) xs)
-
+-- (<*>) xs ys = flatmap (flip map ys) xs
 -- | Insert into an Optional.
 --
 -- prop> \x -> pure x == Full x
@@ -173,7 +173,7 @@ lift3 ::
   -> f d
 -- lift3 f a b c = f <$> a <*> b <*> c
 lift3 f a b c = (lift2 f a b) <*> c
---   error "todo: Course.Applicative#lift3"
+
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -284,9 +284,9 @@ lift1 = (<$>)
   f b
   -> f a
   -> f b
-(<*) = flip $ lift2 $ const id -- I am happy I am finally starting to think in terms of flip
+-- (<*) = flip $ lift2 $ const id -- I am happy I am finally starting to think in terms of flip
                                -- but it's not needed here!
-(<*) = 
+(<*) = lift2 const
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -308,8 +308,9 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
+sequence = foldRight (lift2 (:.)) (pure Nil)
+-- seqOptional = foldRight (twiceOptional (:.)) (Full Nil)
+
 
 -- | Replicate an effect a given number of times.
 --
@@ -334,8 +335,14 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+replicateA n fa = (foo n Nil) <$> fa
+  where
+    foo :: Int -> List a -> a -> List a
+    foo 0 xs _ = xs
+    foo n xs x = foo (n-1) (x :. xs) x -- this is wrong! try last ex
+
+-- Looks like we already have a function replicate :: Int -> a -> List a
+-- replicateA n fa = f replicate
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -364,6 +371,11 @@ filtering ::
   -> f (List a)
 filtering =
   error "todo: Course.Applicative#filtering"
+
+-- implement fmap
+(<$$>) :: Applicative f => (a -> b) -> f a -> f b
+-- (<$$>) f x = pure f <*> x
+(<$$>) f = (pure f <*>) -- todo: why exactly are brackets needed here??
 
 -----------------------
 -- SUPPORT LIBRARIES --
