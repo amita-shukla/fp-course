@@ -173,7 +173,6 @@ lift3 ::
   -> f d
 -- lift3 f a b c = f <$> a <*> b <*> c
 lift3 f a b c = (lift2 f a b) <*> c
---   error "todo: Course.Applicative#lift3"
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -284,9 +283,9 @@ lift1 = (<$>)
   f b
   -> f a
   -> f b
-(<*) = flip $ lift2 $ const id -- I am happy I am finally starting to think in terms of flip
+-- (<*) = flip $ lift2 $ const id -- I am happy I am finally starting to think in terms of flip
                                -- but it's not needed here!
-(<*) = 
+(<*) = lift2 const
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -308,8 +307,7 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
+sequence = foldRight (lift2 (:.)) (pure Nil) -- not entirely clear of this
 
 -- | Replicate an effect a given number of times.
 --
@@ -334,8 +332,8 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+replicateA n fa = sequence xs where
+  xs = replicate n fa -- this function exists!
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -362,8 +360,7 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering f xs = sequence (filter f xs)
 
 -----------------------
 -- SUPPORT LIBRARIES --
