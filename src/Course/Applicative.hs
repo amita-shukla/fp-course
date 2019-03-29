@@ -65,6 +65,7 @@ instance Applicative List where
   pure x = x :. Nil
   (<*>) :: List (a -> b) -> List a -> List b
   (<*>) xs ys = flatten (map (\x -> map x ys) xs)
+-- (<*>) xs ys = flatmap (flip map ys) xs
 
 -- | Insert into an Optional.
 --
@@ -307,7 +308,8 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence = foldRight (lift2 (:.)) (pure Nil) -- not entirely clear of this
+sequence = foldRight (lift2 (:.)) (pure Nil)
+-- seqOptional = foldRight (twiceOptional (:.)) (Full Nil)
 
 -- | Replicate an effect a given number of times.
 --
@@ -334,6 +336,14 @@ replicateA ::
   -> f (List a)
 replicateA n fa = sequence xs where
   xs = replicate n fa -- this function exists!
+-- replicateA n fa = (foo n Nil) <$> fa
+--   where
+--     foo :: Int -> List a -> a -> List a
+--     foo 0 xs _ = xs
+--     foo n xs x = foo (n-1) (x :. xs) x -- this is wrong! try last ex
+
+-- Looks like we already have a function replicate :: Int -> a -> List a
+-- replicateA n fa = f replicate
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -361,6 +371,11 @@ filtering ::
   -> List a
   -> f (List a)
 filtering f xs = sequence (filter f xs)
+
+-- implement fmap
+(<$$>) :: Applicative f => (a -> b) -> f a -> f b
+-- (<$$>) f x = pure f <*> x
+(<$$>) f = (pure f <*>) -- todo: why exactly are brackets needed here??
 
 -----------------------
 -- SUPPORT LIBRARIES --
