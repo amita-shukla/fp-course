@@ -370,7 +370,9 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering f xs = sequence (filter f xs)
+filtering p = foldRight (\a -> lift2 (\b -> if b then (a:.) else id) (p a)) (pure Nil)
+
+-- filtering f xs = sequence (filter f xs)
 
 -- implement fmap
 (<$$>) :: Applicative f => (a -> b) -> f a -> f b
