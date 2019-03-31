@@ -47,7 +47,7 @@ instance Monad List where
     (a -> List b)
     -> List a
     -> List b
-  (=<<) = flatmap
+  (=<<) = flatMap
 
 -- | Binds a function on an Optional.
 --
@@ -58,8 +58,8 @@ instance Monad Optional where
     (a -> Optional b)
     -> Optional a
     -> Optional b
-  (=<<) _ Empty= Nothing
-  (=<<) f (Full a) = Full (f a)
+  (=<<) _ Empty= Empty
+  (=<<) f (Full x) = f x
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -109,10 +109,9 @@ instance Monad ((->) t) where
   f (a -> b)
   -> f a
   -> f b
-(<**>) f a =
-  f =<< \f' ->
-  a =<< \a' ->
-  pure (f' a')
+-- (<**>) fab fa = fab >>= (\ab -> (<$>) ab fa)
+-- (<**>) fab fa = fab >>= (\ab -> ab <$> fa)
+(<**>) fab fa = fab >>= ( <$> fa)
 
 infixl 4 <**>
 
@@ -133,7 +132,11 @@ join ::
   Monad f =>
   f (f a)
   -> f a
-join x =
+join = (>>= id)
+-- >>= :: f a -> (a -> f b) -> f b
+-- let a = f a then >>= :: f (f a) -> (f a -> f b) -> f b
+-- let b = a (cpz we see the o/p of join is f a) then >>= :: f (f a) -> (f a -> f a) -> f a
+-- (f a -> f a) = id hence join = (>>= id)
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -146,8 +149,8 @@ join x =
   f a
   -> (a -> f b)
   -> f b
-(>>=) =
-  error "todo: Course.Monad#(>>=)"
+-- (>>=) fa g = join ((<$>) g fa )
+(>>=) fa g = join (g <$> fa)
 
 infixl 1 >>=
 
@@ -162,8 +165,11 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+(<=<) f g a =  f =<< g a -- tests all right
+-- (<=<) f g a =  -- this implimentation gets stuck on test. why?
+--  g a >>= \b ->
+--  f b >>= \c ->
+--  pure c
 
 infixr 1 <=<
 

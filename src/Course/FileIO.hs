@@ -85,24 +85,32 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile fileName contents =
+  putStrLn $ fstLine ++ "\n" ++ sndLine
+    where
+    fstLine = "============ " ++ fileName
+    sndLine = contents
+
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles =
-  error "todo: Course.FileIO#printFiles"
+-- printFiles tpList = void $ sequence $ uncurry printFile <$> tpList
+printFiles = void $ sequence . (<$>) (uncurry printFile)
+-- printFiles tplList = tplList >>= \tpl ->
+   -- printFile (fst tpl) (snd tpl)
+
+
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile fp =
+  readFile fp
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
