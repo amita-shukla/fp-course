@@ -80,7 +80,8 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) f (State k) = State (\s -> (f a, t) where (a, t) = k s)
+  (<$>) f (State k) = State (\s -> let (a, t) = k s in (f a, t)) -- q. I initially started with where, why doesn't it work here?
+
 
 
 -- | Implement the `Applicative` instance for `State s`.
@@ -98,14 +99,18 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo: Course.State pure#instance (State s)"
+  pure a =
+    State (\s -> (a,s))
+    -- State (a,) -- tuple section eqv to:  (\s -> (a,s))
   (<*>) ::
     State s (a -> b)
     -> State s a
     -> State s b 
-  (<*>) =
-    error "todo: Course.State (<*>)#instance (State s)"
+  (<*>) (State frs) (State rs) = -- phew! don't ask me to do this again!
+    State (\s -> let (f , s') = frs s
+                     (a', s'') = rs s'
+                 in (f a', s'')
+          )
 
 -- | Implement the `Bind` instance for `State s`.
 --
@@ -119,8 +124,11 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo: Course.State (=<<)#instance (State s)"
+  (=<<) f (State rs) =
+    State (\s -> let (a, s') = rs s
+                     (State rs') = f a
+                 in  rs' s'
+          )
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
