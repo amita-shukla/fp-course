@@ -166,7 +166,7 @@ infixl 1 >>=
   -> a
   -> f c
 (<=<) f g a =  f =<< g a -- tests all right
--- (<=<) f g a =  -- this implimentation gets stuck on test. why?
+-- (<=<) f g a =  -- this implementation gets stuck on test. why?
 --  g a >>= \b ->
 --  f b >>= \c ->
 --  pure c

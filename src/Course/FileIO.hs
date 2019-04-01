@@ -98,7 +98,7 @@ printFiles ::
   List (FilePath, Chars)
   -> IO ()
 -- printFiles tpList = void $ sequence $ uncurry printFile <$> tpList
-printFiles = void $ sequence . (<$>) (uncurry printFile)
+printFiles = void . sequence . (<$>) (uncurry printFile)
 -- printFiles tplList = tplList >>= \tpl ->
    -- printFile (fst tpl) (snd tpl)
 
@@ -110,29 +110,36 @@ getFile ::
   FilePath
   -> IO (FilePath, Chars)
 getFile fp =
-  readFile fp
+  -- lift2 (<$>) (,) readFile
+  readFile fp >>= \chars -> pure (fp, chars)
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+-- getFiles fpl = sequence $ getFile <$> fpl
+getFiles = sequence . (<$>) getFile
+
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@ and @printFiles@.
 run ::
   FilePath
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run fp = do
+  filePaths <- readFile fp
+  files <- getFiles (lines filePaths)
+  printFiles files
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  getArgs >>= \args ->
+    case args of
+      fp :. Nil -> run fp
+      _ -> putStrLn "enter single filename"
 
 ----
 
