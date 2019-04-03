@@ -149,8 +149,15 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM =
-  error "todo: Course.State#findM"
+findM _ Nil = pure Empty
+findM f (h :. t) =
+  (<=<) (\b -> if b then pure (Full h) else (findM f t)) f h -- matched it with:
+                                                             -- >=> :: (b -> f c)               -> (a -> f b)    -> a -> f c
+                                                             -- >=> :: (Bool -> f (Optional a)) -> (a -> f Bool) -> a -> f (Optional a)
+-- this also works. -- todo: how?
+-- findM p (h :. t) =
+--  (\q -> if q then pure (Full h) else findM p t) =<< p h
+
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
