@@ -132,11 +132,13 @@ join ::
   Monad f =>
   f (f a)
   -> f a
-join = (>>= id)
+-- join = (>>= id) -- this compiles well. The only problem is you are defining both functions in terms of each other
 -- >>= :: f a -> (a -> f b) -> f b
 -- let a = f a then >>= :: f (f a) -> (f a -> f b) -> f b
 -- let b = a (cpz we see the o/p of join is f a) then >>= :: f (f a) -> (f a -> f a) -> f a
 -- (f a -> f a) = id hence join = (>>= id)
+join = (=<<) id -- observe that I have changed the order of brackets.
+                -- this is prefix while the above is infix
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -165,11 +167,11 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) f g a =  f =<< g a -- tests all right
--- (<=<) f g a =  -- this implementation gets stuck on test. why?
---  g a >>= \b ->
---  f b >>= \c ->
---  pure c
+--(<=<) f g a =  f =<< g a -- tests all right
+(<=<) f g a =
+  g a >>= \b ->
+  f b >>= \c ->
+  pure c
 
 infixr 1 <=<
 
