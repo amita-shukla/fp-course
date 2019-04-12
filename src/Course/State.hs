@@ -170,8 +170,20 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat xs = eval (findM cond xs) S.empty
+  where
+    cond a =
+      State
+        (\set ->
+           if S.member a set
+             then (True, set)
+             else (False, S.insert a set)) -- OMG I made this work!
+    -- runState :: S.Set a -> (Bool, S.Set a) -- todo: I try to define runState separately here
+      -- runState set =
+      --   if S.member a set  -- todo: how to get a in scope here?
+      --     then (True, set)
+      --     else (False, S.insert a set)
+
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
