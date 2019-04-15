@@ -195,11 +195,16 @@ distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct xs = eval (filtering pred xs) S.empty
+  where
+    pred :: Ord a => a -> State (S.Set a) Bool
+    pred a = State (\set -> if S.notMember a set then (True, S.insert a set) else (False, set))
 
--- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
--- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1
+
+-- | A happy number is a positive integer,
+-- where the sum of the square of its digits eventually reaches 1 after repetition.
+-- In contrast, a sad number (not a happy number) is where the sum of the square
+-- of its digits never reaches 1
 -- because it results in a recurring sequence.
 --
 -- /Tip:/ Use `firstRepeat` with `produce`.
@@ -219,6 +224,7 @@ distinct =
 --
 -- >>> isHappy 44
 -- True
+-- produce :: (a -> a) -> List a -> a
 isHappy ::
   Integer
   -> Bool
