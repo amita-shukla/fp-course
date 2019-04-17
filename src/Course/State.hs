@@ -228,5 +228,11 @@ distinct xs = eval (filtering pred xs) S.empty
 isHappy ::
   Integer
   -> Bool
-isHappy =
-  error "todo: Course.State#isHappy"
+isHappy n = not isRecurring where
+  isRecurring = contains n $ firstRepeat $ produce sumOfSquares n
+
+sumOfSquares :: Integer -> Integer
+sumOfSquares n = foldRight (+) 0 ((square . toInteger . digitToInt) <$> show' n)
+
+square :: Integer -> Integer --todo: implement using join
+square n = n * n
