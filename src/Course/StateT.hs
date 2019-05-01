@@ -62,18 +62,45 @@ instance Functor f => Functor (StateT s f) where
 --
 -- >>> runStateT (StateT (\s -> ((+2), s P.++ [1]) :. ((+3), s P.++ [1]) :. Nil) <*> (StateT (\s -> (2, s P.++ [2]) :. Nil))) [0]
 -- [(4,[0,1,2]),(5,[0,1,2])]
-instance Monad f => Applicative (StateT s f) where
+instance Monad f => Applicative (StateT s f) where -- here, f is a Monad, so you can use bind and such
   pure ::
     a
     -> StateT s f a
-  pure =
-    error "todo: Course.StateT pure#instance (StateT s f)"
-  (<*>) ::
+  pure a =
+    StateT (\s -> pure (a , s))
+--  (<*>) ::
+--   StateT s f (a -> b)
+--    -> StateT s f a
+--    -> StateT s f b
+--  (<*>) (StateT kfsab) (StateT ksfa) =
+--    StateT (\s -> let
+--      fsab = kfsab s --  f (a -> b, s)
+--      fsa = ksfa s -- f (a , s)
+--     in (pure ((<*>) )) -- agghhh!!
+
+--  (<*>) ::
+--   StateT s f (a -> b)
+--    -> StateT s f a
+--    -> StateT s f b
+--  sfab <*> sfa =
+--    StateT (\s ->
+--      let
+--        sfab' = runStateT sfab s -- f (a -> b, s)
+--        sfa' = runStateT sfa s -- f (a, s)
+--      in (\x -> pure( fst ( _todo <$> sfa'),s)) =<< sfab' -- aghh!!
+--    )
+
+  (<*>) :: -- phew, finally a cleaner soln!
    StateT s f (a -> b)
     -> StateT s f a
     -> StateT s f b
-  (<*>) =
-    error "todo: Course.StateT (<*>)#instance (StateT s f)"
+  sfab <*> sfa =
+    StateT (\s ->
+      do
+        (ab,sab) <- runStateT sfab s
+        (a, sa) <- runStateT sfa sab -- notice I have used 'sab' in runStateT instead of s here
+        return (ab a, sa)
+     )
 
 -- | Implement the `Monad` instance for @StateT s f@ given a @Monad f@.
 -- Make sure the state value is passed through in `bind`.
