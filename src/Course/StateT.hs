@@ -39,7 +39,10 @@ instance Functor f => Functor (StateT s f) where
     (a -> b)
     -> StateT s f a
     -> StateT s f b
-  (<$>) g (StateT k) = StateT (\s -> let fas = k s  in (<$>) (\as -> (g $ fst as, s)) fas)
+  --(<$>) g (StateT k) = StateT (\s -> let fas = k s  in (\as -> (g $ fst as, s)) <$>  fas)
+  (<$>) g sfa = StateT (\s -> (\(a,s') -> (g a, s')) <$> runStateT sfa s) --todo: here:
+                                                                          -- runStateT :: StateT s f a -> s -> f (a,s)
+                                                                          -- how does this work?
 
 
 -- | Implement the `Applicative` instance for @StateT s f@ given a @Monad f@.

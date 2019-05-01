@@ -232,7 +232,7 @@ isHappy n = not isRecurring where
   isRecurring = contains n $ firstRepeat $ produce sumOfSquares n
 
 sumOfSquares :: Integer -> Integer
-sumOfSquares n = foldRight (+) 0 ((square . toInteger . digitToInt) <$> show' n)
+sumOfSquares n = foldRight (+) 0 (square . toInteger . digitToInt <$> show' n)
 
 square :: Integer -> Integer --todo: implement using join
 square n = n * n
