@@ -110,13 +110,21 @@ instance Monad f => Applicative (StateT s f) where -- here, f is a Monad, so you
 --
 -- >>> let modify f = StateT (\s -> pure ((), f s)) in runStateT (modify (+1) >>= \() -> modify (*2)) 7
 -- ((),16)
-instance Monad f => Monad (StateT s f) where
+instance Monad f => Monad (StateT s f) where -- note that f is a monad here
   (=<<) ::
     (a -> StateT s f b)
     -> StateT s f a
     -> StateT s f b
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (StateT s f)"
+  g =<< sfa =
+    StateT (\s ->
+      do
+        (a, s') <- runStateT sfa s
+        (b, s'') <- runStateT (g a) s'
+        return (b, s'')
+    )
+-- todo : reduce to: -- figure this out
+--  f =<< StateT k =
+--    StateT (((=<<) (\(a, t) -> runStateT (f a) t)) . k)
 
 -- | A `State'` is `StateT` specialised to the `ExactlyOne` functor.
 type State' s a =
@@ -129,8 +137,9 @@ type State' s a =
 state' ::
   (s -> (a, s))
   -> State' s a
-state' =
-  error "todo: Course.StateT#state'"
+state' f =
+  -- StateT (\s -> ExactlyOne (f s))
+  StateT (ExactlyOne . f) -- try this more often plz!
 
 -- | Provide an unwrapper for `State'` values.
 --
@@ -140,8 +149,8 @@ runState' ::
   State' s a
   -> s
   -> (a, s)
-runState' =
-  error "todo: Course.StateT#runState'"
+runState' (StateT k) = runExactlyOne . k -- simple. k s = ExactlyOne (a,s'). then runExactlyOne on this = (a, s').
+
 
 -- | Run the `StateT` seeded with `s` and retrieve the resulting state.
 --
@@ -152,8 +161,10 @@ execT ::
   StateT s f a
   -> s
   -> f s
-execT =
-  error "todo: Course.StateT#execT"
+execT sfa s =
+  snd <$> runStateT sfa s
+--execT = -- todo: why doesn't this work? trying to convert it into point free...
+--  (<$>) snd runStateT
 
 -- | Run the `State'` seeded with `s` and retrieve the resulting state.
 --
