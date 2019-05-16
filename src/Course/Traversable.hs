@@ -58,7 +58,7 @@ instance Traversable Optional where
 --    Optional <$> f a -- or optional :: (a -> b) -> a > Optional a -> b
 --  traverse _ Empty = pure Empty
 --  traverse f (Full a) = Full <$> f a
-  traverse f oa = optional (\x -> Full <$> f x) (pure Empty) oa
+  traverse f = optional (\ x -> Full <$> f x) (pure Empty)
 
 -- | Sequences a traversable value of structures to a structure of a traversable value.
 --
