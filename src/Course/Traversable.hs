@@ -31,13 +31,13 @@ class Functor t => Traversable t where
     -> f (t b)
 
 instance Traversable List where
-  traverse ::
+  traverse ::  -- the intuition is, that you're deconstructing outer type constructor and constructing it with f
     Applicative f =>
     (a -> f b)
     -> List a
     -> f (List b)
   traverse f =
-    foldRight (\a b -> (:.) <$> f a <*> b) (pure Nil)
+    foldRight (\a b -> (:.) <$> f a <*> b) (pure Nil) -- here, deconstruct the list, but wrap inside 'f'.
 
 instance Traversable ExactlyOne where
   traverse ::
@@ -45,8 +45,8 @@ instance Traversable ExactlyOne where
     (a -> f b)
     -> ExactlyOne a
     -> f (ExactlyOne b)
-  traverse =
-    error "todo: Course.Traversable traverse#instance ExactlyOne"
+  traverse f (ExactlyOne a) =
+    ExactlyOne <$> f a
 
 instance Traversable Optional where
   traverse ::
@@ -54,8 +54,11 @@ instance Traversable Optional where
     (a -> f b)
     -> Optional a
     -> f (Optional b)
-  traverse =
-    error "todo: Course.Traversable traverse#instance Optional"
+--  traverse f (Optional a) = -- we intend to do something like this, but obviously we need to pattern match, or foldright,
+--    Optional <$> f a -- or optional :: (a -> b) -> a > Optional a -> b
+--  traverse _ Empty = pure Empty
+--  traverse f (Full a) = Full <$> f a
+  traverse f oa = optional (\x -> Full <$> f x) (pure Empty) oa
 
 -- | Sequences a traversable value of structures to a structure of a traversable value.
 --
@@ -72,7 +75,7 @@ sequenceA ::
   t (f a)
   -> f (t a)
 sequenceA =
-  error "todo: Course.Traversable#sequenceA"
+  traverse id -- the credit for this solution goes to hole driven development
 
 instance (Traversable f, Traversable g) =>
   Traversable (Compose f g) where
