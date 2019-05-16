@@ -16,17 +16,21 @@ newtype Compose f g a =
 -- Implement a Functor instance for Compose
 instance (Functor f, Functor g) =>
     Functor (Compose f g) where
-  (<$>) =
-    error "todo: Course.Compose (<$>)#instance (Compose f g)"
+  (<$>) p (Compose fga) =
+    Compose ((p <$>) <$> fga) -- still not very clear about '(p <$>)' part...
 
 instance (Applicative f, Applicative g) =>
   Applicative (Compose f g) where
 -- Implement the pure function for an Applicative instance for Compose
   pure =
-    error "todo: Course.Compose pure#instance (Compose f g)"
+    -- Compose (pure (pure a))
+    Compose . pure . pure -- observer how the (.) works with type
+
 -- Implement the (<*>) function for an Applicative instance for Compose
-  (<*>) =
-    error "todo: Course.Compose (<*>)#instance (Compose f g)"
+  (<*>) (Compose fgab) (Compose fga) =
+--    Compose (((<*>) <$> fgab) <*> fga)
+--    Compose ((<*>) <$> fgab <*> fga) -- remove brackets
+    Compose (lift2 (<*>) fgab fga) -- check the implementation of list2
 
 instance (Monad f, Monad g) =>
   Monad (Compose f g) where
