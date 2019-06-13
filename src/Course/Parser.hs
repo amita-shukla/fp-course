@@ -108,6 +108,7 @@ constantParser ::
   ParseResult a
   -> Parser a
 constantParser =
+  -- P (\_ -> pr)
   P . const
 
 -- | Return a parser that succeeds with a character off the input or fails with an error if the input is empty.
@@ -120,7 +121,10 @@ constantParser =
 character ::
   Parser Char
 character =
-  error "todo: Course.Parser#character"
+  P (\i -> case i of
+    (h:.t) -> Result t h -- todo: how to match that this list of should be type chars
+    Nil -> UnexpectedEof
+  )
 
 -- | Parsers can map.
 -- Write a Functor instance for a @Parser@.
@@ -132,8 +136,14 @@ instance Functor Parser where
     (a -> b)
     -> Parser a
     -> Parser b
-  (<$>) =
-     error "todo: Course.Parser (<$>)#instance Parser"
+  (<$>) f (P p) =
+     P (\i -> case p i of
+       UnexpectedEof -> UnexpectedEof
+       ExpectedEof inp -> ExpectedEof inp
+       UnexpectedChar c -> UnexpectedChar c
+       UnexpectedString s -> UnexpectedString s
+       Result inp a -> Result inp (f a)
+       )
 
 -- | Return a parser that always succeeds with the given value and consumes no input.
 --
@@ -142,8 +152,8 @@ instance Functor Parser where
 valueParser ::
   a
   -> Parser a
-valueParser =
-  error "todo: Course.Parser#valueParser"
+valueParser a =
+  P (\i -> Result i a)
 
 -- | Return a parser that tries the first parser for a successful value.
 --
@@ -166,8 +176,11 @@ valueParser =
   Parser a
   -> Parser a
   -> Parser a
-(|||) =
-  error "todo: Course.Parser#(|||)"
+(|||) (P p1) (P p2) =
+  P (\i -> case p1 i of
+    Result _ _ -> p1 i
+    _ -> p2 i
+  )
 
 infixl 3 |||
 
