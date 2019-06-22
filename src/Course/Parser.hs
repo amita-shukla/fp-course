@@ -26,7 +26,8 @@ data ParseResult a =
   | ExpectedEof Input
   | UnexpectedChar Char
   | UnexpectedString Chars
-  | Result Input a
+  | Result Input a -- here the first param of type Input is the input remaining to be parsed.
+                   -- and the seconds param of type a is the result of parsing the input
   deriving Eq
 
 instance Show a => Show (ParseResult a) where
@@ -86,6 +87,7 @@ onResult (Result i a) k =
 
 data Parser a = P (Input -> ParseResult a)
 
+--- | Extract the function out of a Parser.
 parse ::
   Parser a
   -> Input
@@ -211,8 +213,9 @@ instance Monad Parser where
     (a -> Parser b)
     -> Parser a
     -> Parser b
-  (=<<) =
-    error "todo: Course.Parser (=<<)#instance Parser"
+  (=<<) f (P p) =
+    P (\i -> let pra = p i in onResult pra (\inp a -> parse (f a) inp))
+
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @(=<<)@.
@@ -226,8 +229,8 @@ instance Applicative Parser where
     Parser (a -> b)
     -> Parser a
     -> Parser b
-  (<*>) =
-    error "todo: Course.Parser (<*>)#instance Parser"
+  (<*>) pf pa =
+    pf >>= \f -> pa >>= \a -> pure (f a) -- just reused the way we write apply in terms of bind
 
 -- | Return a parser that produces a character but fails if
 --
@@ -245,8 +248,8 @@ instance Applicative Parser where
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy =
-  error "todo: Course.Parser#satisfy"
+-- satisfy = unexpectedCharParser =<< character -- this compiles, but it just doesn't uses the predicate! so wrong logic
+satisfy p = character >>= (\c -> if not (p c) then unexpectedCharParser c else valueParser c)
 
 -- | Return a parser that produces the given character but fails if
 --
@@ -257,8 +260,8 @@ satisfy =
 -- /Tip:/ Use the @satisfy@ function.
 is ::
   Char -> Parser Char
-is =
-  error "todo: Course.Parser#is"
+is = satisfy . (==)
+--is c = satisfy (== c)
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
 --
@@ -269,8 +272,7 @@ is =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isDigit@ functions.
 digit ::
   Parser Char
-digit =
-  error "todo: Course.Parser#digit"
+digit = satisfy isDigit
 
 --
 -- | Return a parser that produces a space character but fails if
@@ -282,8 +284,7 @@ digit =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isSpace@ functions.
 space ::
   Parser Char
-space =
-  error "todo: Course.Parser#space"
+space = satisfy isSpace
 
 -- | Return a parser that continues producing a list of values from the given parser.
 --
@@ -341,8 +342,7 @@ list1 =
 -- /Tip:/ Use the @list1@ and @space@ functions.
 spaces1 ::
   Parser Chars
-spaces1 =
-  error "todo: Course.Parser#spaces1"
+spaces1 = list1 space
 
 -- | Return a parser that produces a lower-case character but fails if
 --
@@ -353,8 +353,7 @@ spaces1 =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isLower@ functions.
 lower ::
   Parser Char
-lower =
-  error "todo: Course.Parser#lower"
+lower = satisfy isLower
 
 -- | Return a parser that produces an upper-case character but fails if
 --
@@ -365,8 +364,7 @@ lower =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isUpper@ functions.
 upper ::
   Parser Char
-upper =
-  error "todo: Course.Parser#upper"
+upper = satisfy isUpper
 
 -- | Return a parser that produces an alpha character but fails if
 --
@@ -377,8 +375,7 @@ upper =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isAlpha@ functions.
 alpha ::
   Parser Char
-alpha =
-  error "todo: Course.Parser#alpha"
+alpha = satisfy isAlpha
 
 -- | Return a parser that sequences the given list of parsers by producing all their results
 -- but fails on the first failing parser of the list.
@@ -394,8 +391,7 @@ alpha =
 sequenceParser ::
   List (Parser a)
   -> Parser (List a)
-sequenceParser =
-  error "todo: Course.Parser#sequenceParser"
+sequenceParser = sequence -- Applicative.sequence
 
 -- | Return a parser that produces the given number of values off the given parser.
 -- This parser fails if the given parser fails in the attempt to produce the given number of values.
@@ -411,8 +407,7 @@ thisMany ::
   Int
   -> Parser a
   -> Parser (List a)
-thisMany =
-  error "todo: Course.Parser#thisMany"
+thisMany = replicateA
 
 -- | This one is done for you.
 --
@@ -444,8 +439,7 @@ ageParser =
 -- True
 firstNameParser ::
   Parser Chars
-firstNameParser =
-  error "todo: Course.Parser#firstNameParser"
+firstNameParser = upper >>= _todo
 
 -- | Write a parser for Person.surname.
 --
