@@ -58,7 +58,7 @@ infinity =
 -- 1 :. 2 :. 3 :. Nil
 -- 1 `f` 2 `f` 3 `f` b
 -- 1 2 3 Nil
--- for infinite list, there is no nil, so can't pass infinite list to foldright
+-- for infinite list, there is no nil, so can't pass infinite list to foldright -- this is wrong, I will be blogging about this.
 
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
@@ -148,6 +148,7 @@ length ::
   -> Int
 length xs = foldRight (+) 0 (map (const 1) xs)
 -- length = foldr (const (1+)) 0
+-- length = foldRight (\a -> \b -> b + 1) 0
 
 -- | Map the given function on each element of the list.
 --
